@@ -5,8 +5,7 @@ return {
     config = function()
         require("nvim-treesitter").setup({})
 
-        -- Install missing parsers on startup
-        local parsers = { "lua", "python", "c", "cpp", "bash", "markdown", "vim", "vimdoc" }
+        local parsers = { "lua", "python", "c", "cpp", "rust", "bash", "markdown", "vim", "vimdoc" }
         local installed = require("nvim-treesitter").get_installed()
         local to_install = vim.tbl_filter(function(p)
             return not vim.tbl_contains(installed, p)

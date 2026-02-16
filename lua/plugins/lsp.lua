@@ -11,9 +11,7 @@ return {
         dependencies = { "williamboman/mason.nvim" },
         config = function()
             require("mason-lspconfig").setup({
-                ensure_installed = {
-                    "lua_ls",
-                },
+                ensure_installed = { "lua_ls" },
             })
         end,
     },
@@ -25,35 +23,31 @@ return {
             "williamboman/mason-lspconfig.nvim",
         },
         config = function()
-            -- Enhance capabilities with cmp if available
             local capabilities = vim.lsp.protocol.make_client_capabilities()
             local ok, cmp_lsp = pcall(require, "cmp_nvim_lsp")
             if ok then
                 capabilities = cmp_lsp.default_capabilities(capabilities)
             end
 
-            -- Keymaps on LSP attach
             vim.api.nvim_create_autocmd("LspAttach", {
                 callback = function(args)
                     local map = function(keys, func, desc)
                         vim.keymap.set("n", keys, func, { buffer = args.buf, desc = desc })
                     end
-
-                    map("gd", vim.lsp.buf.definition, "Go to definition")
-                    map("gD", vim.lsp.buf.declaration, "Go to declaration")
-                    map("gr", vim.lsp.buf.references, "Go to references")
-                    map("gi", vim.lsp.buf.implementation, "Go to implementation")
-                    map("K", vim.lsp.buf.hover, "Hover documentation")
-                    map("<leader>ca", vim.lsp.buf.code_action, "Code action")
-                    map("<leader>rn", vim.lsp.buf.rename, "Rename symbol")
-                    map("<leader>D", vim.lsp.buf.type_definition, "Type definition")
-                    map("[d", vim.diagnostic.goto_prev, "Previous diagnostic")
-                    map("]d", vim.diagnostic.goto_next, "Next diagnostic")
-                    map("<leader>d", vim.diagnostic.open_float, "Show diagnostic")
+                    map("gd", vim.lsp.buf.definition, "go to definition")
+                    map("gD", vim.lsp.buf.declaration, "go to declaration")
+                    map("gr", vim.lsp.buf.references, "go to references")
+                    map("gi", vim.lsp.buf.implementation, "go to implementation")
+                    map("K", vim.lsp.buf.hover, "hover docs")
+                    map("<leader>ca", vim.lsp.buf.code_action, "code action")
+                    map("<leader>rn", vim.lsp.buf.rename, "rename symbol")
+                    map("<leader>D", vim.lsp.buf.type_definition, "type definition")
+                    map("[d", vim.diagnostic.goto_prev, "prev diagnostic")
+                    map("]d", vim.diagnostic.goto_next, "next diagnostic")
+                    map("<leader>d", vim.diagnostic.open_float, "show diagnostic")
                 end,
             })
 
-            -- lua_ls (installed via mason)
             vim.lsp.config("lua_ls", {
                 capabilities = capabilities,
                 settings = {
@@ -64,23 +58,38 @@ return {
                 },
             })
 
-            -- clangd (system-installed via pacman clang package)
             vim.lsp.config("clangd", {
                 capabilities = capabilities,
                 cmd = { "clangd" },
             })
 
-            -- pyright (requires npm — install via: sudo pacman -S npm, then :MasonInstall pyright)
             vim.lsp.config("pyright", { capabilities = capabilities })
 
-            -- Only enable servers whose binaries are available
-            local servers = { "lua_ls", "clangd", "pyright" }
+            vim.lsp.config("rust_analyzer", {
+                capabilities = capabilities,
+                settings = {
+                    ["rust-analyzer"] = {
+                        check = { command = "clippy" },
+                    },
+                },
+            })
+
+            -- only start servers that are actually installed
+            local bins = {
+                lua_ls = { "lua-language-server" },
+                clangd = { "clangd" },
+                pyright = { "pyright-langserver" },
+                rust_analyzer = { "rust-analyzer" },
+            }
+
             local enabled = {}
-            for _, server in ipairs(servers) do
-                if vim.fn.executable(server == "pyright" and "pyright-langserver" or server) == 1
-                    or vim.fn.executable(vim.fn.stdpath("data") .. "/mason/bin/" .. server) == 1
-                then
-                    table.insert(enabled, server)
+            local mason_bin = vim.fn.stdpath("data") .. "/mason/bin/"
+            for server, names in pairs(bins) do
+                for _, name in ipairs(names) do
+                    if vim.fn.executable(name) == 1 or vim.fn.executable(mason_bin .. name) == 1 then
+                        table.insert(enabled, server)
+                        break
+                    end
                 end
             end
 

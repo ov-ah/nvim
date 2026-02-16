@@ -14,6 +14,7 @@ return {
                 lua = "lua",
                 c = "cd $dir && gcc $fileName -o $fileNameWithoutExt -lm && ./$fileNameWithoutExt",
                 cpp = "cd $dir && g++ $fileName -o $fileNameWithoutExt -std=c++17 && ./$fileNameWithoutExt",
+                rust = "cd $dir && rustc $fileName -o $fileNameWithoutExt && ./$fileNameWithoutExt",
                 bash = "bash",
                 sh = "bash",
             },
