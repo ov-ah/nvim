@@ -13,8 +13,6 @@ return {
             require("mason-lspconfig").setup({
                 ensure_installed = {
                     "lua_ls",
-                    "pyright",
-                    "clangd",
                 },
             })
         end,
@@ -55,7 +53,7 @@ return {
                 end,
             })
 
-            -- Server configs using nvim 0.11+ API
+            -- lua_ls (installed via mason)
             vim.lsp.config("lua_ls", {
                 capabilities = capabilities,
                 settings = {
@@ -66,10 +64,29 @@ return {
                 },
             })
 
-            vim.lsp.config("pyright", { capabilities = capabilities })
-            vim.lsp.config("clangd", { capabilities = capabilities })
+            -- clangd (system-installed via pacman clang package)
+            vim.lsp.config("clangd", {
+                capabilities = capabilities,
+                cmd = { "clangd" },
+            })
 
-            vim.lsp.enable({ "lua_ls", "pyright", "clangd" })
+            -- pyright (requires npm — install via: sudo pacman -S npm, then :MasonInstall pyright)
+            vim.lsp.config("pyright", { capabilities = capabilities })
+
+            -- Only enable servers whose binaries are available
+            local servers = { "lua_ls", "clangd", "pyright" }
+            local enabled = {}
+            for _, server in ipairs(servers) do
+                if vim.fn.executable(server == "pyright" and "pyright-langserver" or server) == 1
+                    or vim.fn.executable(vim.fn.stdpath("data") .. "/mason/bin/" .. server) == 1
+                then
+                    table.insert(enabled, server)
+                end
+            end
+
+            if #enabled > 0 then
+                vim.lsp.enable(enabled)
+            end
         end,
     },
 }
